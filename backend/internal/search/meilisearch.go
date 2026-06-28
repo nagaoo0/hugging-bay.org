@@ -64,13 +64,13 @@ func (c *Client) EnsureIndexes() error {
 		return fmt.Errorf("update filterable attrs: %w", err)
 	}
 
-	sortableAttrs := []interface{}{"download_count", "parameter_count", "total_size"}
+	sortableAttrs := []string{"download_count", "parameter_count", "total_size"}
 	_, err = idx.UpdateSortableAttributes(&sortableAttrs)
 	if err != nil {
 		return fmt.Errorf("update sortable attrs: %w", err)
 	}
 
-	searchableAttrs := []interface{}{
+	searchableAttrs := []string{
 		"name", "description", "architecture", "tags", "license", "framework",
 	}
 	_, err = idx.UpdateSearchableAttributes(&searchableAttrs)
