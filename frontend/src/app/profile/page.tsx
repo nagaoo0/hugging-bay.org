@@ -10,13 +10,13 @@ import Link from 'next/link'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [token, setToken] = useState<string | null>(null)
-  const [user, setUser] = useState<User | null>(null)
-  const [keys, setKeys] = useState<APIKey[]>([])
+  const [token,      setToken]      = useState<string | null>(null)
+  const [user,       setUser]       = useState<User | null>(null)
+  const [keys,       setKeys]       = useState<APIKey[]>([])
   const [newKeyName, setNewKeyName] = useState('')
   const [createdKey, setCreatedKey] = useState('')
-  const [copiedKey, setCopiedKey] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [copiedKey,  setCopiedKey]  = useState(false)
+  const [loading,    setLoading]    = useState(true)
 
   useEffect(() => {
     const t = getToken()
@@ -26,9 +26,7 @@ export default function ProfilePage() {
       setUser(u)
       setKeys(k || [])
       setLoading(false)
-    }).catch(() => {
-      router.push('/auth/login')
-    })
+    }).catch(() => router.push('/auth/login'))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -41,9 +39,7 @@ export default function ProfilePage() {
       setNewKeyName('')
       const updatedKeys = await listAPIKeys(token)
       setKeys(updatedKeys || [])
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   }
 
   async function handleDeleteKey(id: string) {
@@ -58,55 +54,61 @@ export default function ProfilePage() {
     setTimeout(() => setCopiedKey(false), 2000)
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><p style={{ color: 'var(--hb-muted)' }}>Loading…</p></div>
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <p style={{ color: 'var(--hb-muted)' }}>Loading…</p>
+    </div>
+  )
   if (!user) return null
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
+    <div className="max-w-2xl mx-auto px-4 py-10 space-y-5">
+
       {/* Profile card */}
       <div className="card p-6">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold"
-            style={{ background: 'rgba(124,58,237,0.2)', color: '#a855f7' }}>
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold shrink-0"
+            style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--hb-purple-light)' }}>
             {user.username[0].toUpperCase()}
           </div>
-          <div>
-            <h1 className="text-xl font-bold">{user.display_name || user.username}</h1>
-            <p className="text-sm" style={{ color: 'var(--hb-muted)' }}>@{user.username}</p>
-            <p className="text-sm" style={{ color: 'var(--hb-muted)' }}>{user.email}</p>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold">{user.display_name || user.username}</h1>
+              {(user.is_admin || user.is_moderator) && (
+                <span className="badge" style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--hb-purple-light)', border: '1px solid rgba(124,58,237,0.25)' }}>
+                  {user.is_admin ? 'Admin' : 'Moderator'}
+                </span>
+              )}
+            </div>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--hb-muted)' }}>@{user.username} · {user.email}</p>
           </div>
-          {(user.is_admin || user.is_moderator) && (
-            <span className="ml-auto badge" style={{ background: 'rgba(124,58,237,0.15)', color: '#a855f7', border: '1px solid rgba(124,58,237,0.3)' }}>
-              {user.is_admin ? 'Admin' : 'Moderator'}
-            </span>
-          )}
         </div>
-        {user.bio && <p className="text-sm" style={{ color: 'var(--hb-muted)' }}>{user.bio}</p>}
+        {user.bio && <p className="text-sm mt-4 leading-relaxed" style={{ color: 'var(--hb-muted)' }}>{user.bio}</p>}
       </div>
 
-      {/* Newly created key display */}
+      {/* Newly created key */}
       {createdKey && (
-        <div className="card p-5 border" style={{ borderColor: 'var(--hb-green)', background: 'rgba(16,185,129,0.05)' }}>
-          <h3 className="font-semibold text-sm mb-2" style={{ color: 'var(--hb-green)' }}>API Key Created</h3>
-          <p className="text-xs mb-3" style={{ color: 'var(--hb-muted)' }}>
-            Save this key — it will not be shown again.
-          </p>
-          <div className="flex items-center gap-2 p-3 rounded-lg" style={{ background: 'var(--hb-surface2)', border: '1px solid var(--hb-border)' }}>
+        <div className="card p-5" style={{ borderColor: 'var(--hb-green)', background: 'rgba(16,217,160,0.04)' }}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-sm" style={{ color: 'var(--hb-green)' }}>API Key Created</h3>
+            <button onClick={() => setCreatedKey('')} className="text-xs" style={{ color: 'var(--hb-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>Dismiss</button>
+          </div>
+          <p className="text-xs mb-3" style={{ color: 'var(--hb-muted)' }}>Save this key — it will not be shown again.</p>
+          <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: 'var(--hb-surface2)', border: '1px solid var(--hb-border)' }}>
             <code className="flex-1 text-xs font-mono break-all" style={{ color: 'var(--hb-green)' }}>{createdKey}</code>
-            <button onClick={copyKey} className="shrink-0 p-1.5 rounded" style={{ color: 'var(--hb-muted)' }}>
-              {copiedKey ? <Check size={14} style={{ color: 'var(--hb-green)' }} /> : <Copy size={14} />}
+            <button onClick={copyKey} className="shrink-0 p-1.5 rounded-lg transition-colors" style={{ color: copiedKey ? 'var(--hb-green)' : 'var(--hb-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              {copiedKey ? <Check size={14} /> : <Copy size={14} />}
             </button>
           </div>
-          <button onClick={() => setCreatedKey('')} className="mt-3 text-xs" style={{ color: 'var(--hb-muted)' }}>
-            Dismiss
-          </button>
         </div>
       )}
 
       {/* API Keys */}
       <div className="card p-6">
         <div className="flex items-center gap-2 mb-5">
-          <Key size={16} style={{ color: 'var(--hb-purple)' }} />
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(139,92,246,0.1)' }}>
+            <Key size={15} style={{ color: 'var(--hb-purple-light)' }} />
+          </div>
           <h2 className="font-semibold">API Keys</h2>
         </div>
 
@@ -117,9 +119,8 @@ export default function ProfilePage() {
             onChange={e => setNewKeyName(e.target.value)}
             placeholder="Key name (e.g. CLI, Script)"
           />
-          <button type="submit" className="btn-primary shrink-0">
-            <Plus size={14} />
-            New Key
+          <button type="submit" className="btn-primary shrink-0 gap-1.5" style={{ padding: '10px 16px' }}>
+            <Plus size={14} /> New Key
           </button>
         </form>
 
@@ -128,16 +129,22 @@ export default function ProfilePage() {
         ) : (
           <div className="space-y-2">
             {keys.map(k => (
-              <div key={k.id} className="flex items-center justify-between p-3 rounded-lg"
+              <div key={k.id} className="flex items-center justify-between p-4 rounded-2xl"
                 style={{ background: 'var(--hb-surface2)', border: '1px solid var(--hb-border)' }}>
                 <div>
                   <p className="text-sm font-medium">{k.name || 'Unnamed'}</p>
-                  <p className="text-xs font-mono" style={{ color: 'var(--hb-muted)' }}>
+                  <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--hb-muted)' }}>
                     hb_…{k.key_preview}
                     {k.last_used_at && ` · last used ${new Date(k.last_used_at).toLocaleDateString()}`}
                   </p>
                 </div>
-                <button onClick={() => handleDeleteKey(k.id)} className="p-1.5 rounded text-hb-muted hover:text-hb-red transition-colors">
+                <button
+                  onClick={() => handleDeleteKey(k.id)}
+                  className="p-2 rounded-xl transition-colors"
+                  style={{ color: 'var(--hb-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--hb-red)'; e.currentTarget.style.background = 'rgba(240,72,72,0.08)' }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--hb-muted)'; e.currentTarget.style.background = 'none' }}
+                >
                   <Trash2 size={14} />
                 </button>
               </div>

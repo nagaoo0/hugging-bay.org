@@ -17,35 +17,31 @@ function fmtParams(n: number) {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  verified_author:    '#22c55e',
-  community_verified: '#3b82f6',
+  verified_author:    'var(--hb-green)',
+  community_verified: 'var(--hb-blue)',
   mirror:             '#a855f7',
-  archived:           '#71717a',
-  unverified:         '#f59e0b',
+  archived:           '#52525b',
+  unverified:         'var(--hb-amber)',
 }
 
 export default function ModelCard({ model }: { model: Model }) {
-  const rel    = model.latest_release
-  const dot    = STATUS_COLOR[model.verification_status] || '#71717a'
+  const rel = model.latest_release
+  const dot = STATUS_COLOR[model.verification_status] || '#52525b'
 
   return (
     <Link href={`/models/${model.slug}`} className="model-card">
+      <div style={{ padding: '20px' }}>
 
-      {/* Top bar — accent color strip */}
-      <div style={{ height: 3, background: 'linear-gradient(90deg, #7c3aed, #4f46e5)' }} />
-
-      <div style={{ padding: '16px' }}>
-
-        {/* Header row: arch chip + verification dot */}
+        {/* Header: arch + verification */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 flex-wrap">
             {model.architecture && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded-md" style={{ background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)' }}>
+              <span className="text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: 'rgba(139,92,246,0.1)', color: 'var(--hb-purple-light)', border: '1px solid rgba(139,92,246,0.2)' }}>
                 {model.architecture}
               </span>
             )}
             {rel?.quantization && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded-md" style={{ background: 'var(--hb-surface2)', color: 'var(--hb-muted)', border: '1px solid var(--hb-border)' }}>
+              <span className="text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: 'var(--hb-surface2)', color: 'var(--hb-muted)', border: '1px solid var(--hb-border)' }}>
                 {rel.quantization}
               </span>
             )}
@@ -54,7 +50,7 @@ export default function ModelCard({ model }: { model: Model }) {
         </div>
 
         {/* Uploader */}
-        <p className="text-xs mb-1" style={{ color: 'var(--hb-muted)' }}>
+        <p className="text-xs mb-1.5" style={{ color: 'var(--hb-muted)' }}>
           {model.uploader?.display_name || model.uploader?.username || 'anonymous'}
         </p>
 
@@ -72,9 +68,9 @@ export default function ModelCard({ model }: { model: Model }) {
 
         {/* Tags */}
         {model.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-4">
+          <div className="flex flex-wrap gap-1.5 mb-4">
             {model.tags.slice(0, 3).map(t => (
-              <span key={t} className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'var(--hb-surface2)', color: 'var(--hb-muted)' }}>
+              <span key={t} className="text-xs px-2.5 py-0.5 rounded-full" style={{ background: 'var(--hb-surface2)', color: 'var(--hb-muted)', border: '1px solid var(--hb-border)' }}>
                 {t}
               </span>
             ))}
@@ -83,20 +79,19 @@ export default function ModelCard({ model }: { model: Model }) {
 
         {/* Stats */}
         <div className="flex items-center gap-4 pt-3" style={{ borderTop: '1px solid var(--hb-border)' }}>
-          <StatItem icon={<Download size={12} />} value={model.download_count.toLocaleString()} color="#22c55e" />
-          {rel?.total_size && <StatItem icon={<HardDrive size={12} />} value={fmtBytes(rel.total_size)!} />}
-          {rel?.parameter_count && <StatItem icon={<Cpu size={12} />} value={fmtParams(rel.parameter_count)!} />}
+          <Stat icon={<Download size={12} />} value={model.download_count.toLocaleString()} color="var(--hb-green)" />
+          {rel?.total_size && <Stat icon={<HardDrive size={12} />} value={fmtBytes(rel.total_size)!} />}
+          {rel?.parameter_count && <Stat icon={<Cpu size={12} />} value={fmtParams(rel.parameter_count)!} />}
         </div>
       </div>
     </Link>
   )
 }
 
-function StatItem({ icon, value, color }: { icon: React.ReactNode; value: string; color?: string }) {
+function Stat({ icon, value, color }: { icon: React.ReactNode; value: string; color?: string }) {
   return (
-    <span className="flex items-center gap-1 text-xs" style={{ color: color || 'var(--hb-muted)' }}>
-      {icon}
-      {value}
+    <span className="flex items-center gap-1.5 text-xs" style={{ color: color || 'var(--hb-muted)' }}>
+      {icon}{value}
     </span>
   )
 }
