@@ -33,106 +33,92 @@ export default function Clippy() {
   if (dismissed || !visible) return null
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: 20,
-      right: 20,
-      zIndex: 9999,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'flex-end',
-      gap: 6,
-      userSelect: 'none',
-    }}>
+    <>
+      <style>{`
+        @keyframes clippy-bob {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50%       { transform: translateY(-5px) rotate(6deg); }
+        }
+        @keyframes clippy-shake {
+          0%, 100% { transform: translateX(0) rotate(0deg); }
+          25%       { transform: translateX(-4px) rotate(-10deg); }
+          75%       { transform: translateX(4px) rotate(10deg); }
+        }
+      `}</style>
 
-      {/* Speech bubble */}
       <div style={{
-        background: '#ffffe1',
-        border: '2px solid #000',
-        boxShadow: '3px 3px 0 #000',
-        padding: '10px 12px',
-        maxWidth: 230,
-        fontSize: '11px',
-        fontFamily: 'Tahoma, MS Sans Serif, sans-serif',
-        lineHeight: 1.55,
-        position: 'relative',
-        color: '#000',
+        position: 'fixed',
+        bottom: 20,
+        right: 20,
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: 8,
+        userSelect: 'none',
       }}>
-        {/* Bubble tail */}
-        <div style={{ position: 'absolute', bottom: -10, right: 32, width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: '10px solid #000' }} />
-        <div style={{ position: 'absolute', bottom: -6, right: 34, width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid #ffffe1' }} />
-
-        {/* Title bar of the bubble */}
+        {/* Speech bubble */}
         <div style={{
-          background: 'linear-gradient(to right, #0a246a, #1060d4)',
-          color: 'white',
-          fontSize: '10px',
-          fontWeight: 'bold',
-          padding: '2px 6px',
-          margin: '-10px -12px 8px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          letterSpacing: 0.5,
+          background: 'var(--hb-surface)',
+          border: '1px solid var(--hb-border2)',
+          borderRadius: 12,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          padding: '12px 14px',
+          maxWidth: 240,
+          fontSize: 12,
+          fontFamily: 'inherit',
+          lineHeight: 1.55,
+          position: 'relative',
+          color: 'var(--hb-text)',
         }}>
-          <span>📎 Clippy</span>
-          <button
-            onClick={() => setDismissed(true)}
-            style={{
-              background: '#c0c0c0',
-              border: '1px solid',
-              borderColor: '#fff #808080 #808080 #fff',
-              width: 14,
-              height: 12,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '8px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              padding: 0,
-              color: '#000',
-            }}
-          >✕</button>
+          {/* Bubble tail */}
+          <div style={{ position: 'absolute', bottom: -7, right: 28, width: 12, height: 12, background: 'var(--hb-surface)', border: '1px solid var(--hb-border2)', borderTop: 'none', borderLeft: 'none', transform: 'rotate(45deg)' }} />
+
+          {/* Title row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--hb-muted)' }}>📎 Clippy</span>
+            <button
+              onClick={() => setDismissed(true)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--hb-muted)', padding: '0 0 0 8px', fontSize: 14, lineHeight: 1, display: 'flex', alignItems: 'center' }}
+            >×</button>
+          </div>
+
+          {/* Tip */}
+          <p style={{ marginBottom: 10, whiteSpace: 'pre-line', minHeight: 36, color: 'var(--hb-text)', fontSize: 12 }}>{TIPS[tipIdx]}</p>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+            <button onClick={nextTip} className="btn-secondary" style={{ fontSize: 11, padding: '3px 10px' }}>
+              Next tip
+            </button>
+            <button onClick={() => setDismissed(true)} className="btn-secondary" style={{ fontSize: 11, padding: '3px 10px' }}>
+              Dismiss
+            </button>
+          </div>
         </div>
 
-        {/* Tip text */}
-        <p style={{ marginBottom: 8, whiteSpace: 'pre-line', minHeight: 34 }}>{TIPS[tipIdx]}</p>
-
-        {/* Buttons */}
-        <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-          <button onClick={nextTip} className="win-btn" style={{ fontSize: '10px', padding: '2px 10px' }}>
-            Next tip
-          </button>
-          <button onClick={() => setDismissed(true)} className="win-btn" style={{ fontSize: '10px', padding: '2px 10px' }}>
-            Dismiss
-          </button>
-        </div>
+        {/* Clippy character */}
+        <button
+          onClick={nextTip}
+          title="📎 Clippy — click for tips"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+            marginRight: 8,
+            fontSize: 48,
+            lineHeight: 1,
+            display: 'block',
+            filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))',
+            animation: shaking
+              ? 'clippy-shake 0.5s ease'
+              : 'clippy-bob 2.5s ease-in-out infinite',
+          }}
+        >
+          📎
+        </button>
       </div>
-
-      {/* Clippy character — bouncing paperclip */}
-      <button
-        onClick={nextTip}
-        title="📎 Clippy — click for tips"
-        style={{
-          background: 'none',
-          border: 'none',
-          outline: 'none',
-          boxShadow: 'none',
-          cursor: 'pointer',
-          padding: 0,
-          marginRight: 10,
-          fontSize: 56,
-          lineHeight: 1,
-          display: 'block',
-          filter: 'drop-shadow(2px 2px 0 #000)',
-          animation: shaking
-            ? 'clippy-shake 0.5s ease'
-            : 'clippy-bob 2.5s ease-in-out infinite',
-        }}
-      >
-        📎
-      </button>
-    </div>
+    </>
   )
 }

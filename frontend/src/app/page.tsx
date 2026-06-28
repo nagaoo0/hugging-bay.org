@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { latestModels, popularModels } from '@/lib/api'
+import { Download, HardDrive, ArrowRight, Shield, Zap, Globe } from 'lucide-react'
 import type { Model } from '@/lib/types'
 
 async function getData() {
   try {
-    const [latest, popular] = await Promise.all([latestModels(10), popularModels(10)])
+    const [latest, popular] = await Promise.all([latestModels(8), popularModels(8)])
     return { latest: latest || [], popular: popular || [] }
   } catch {
     return { latest: [], popular: [] }
@@ -12,69 +13,48 @@ async function getData() {
 }
 
 function fmtBytes(b: number) {
-  if (!b) return '—'
-  const u = ['B','KB','MB','GB','TB']
+  if (!b) return null
+  const u = ['B', 'KB', 'MB', 'GB', 'TB']
   let v = b, i = 0
   while (v >= 1024 && i < u.length - 1) { v /= 1024; i++ }
   return `${v.toFixed(1)} ${u[i]}`
 }
 
-function ModelListRow({ model, index }: { model: Model; index: number }) {
+function ModelRow({ model, rank }: { model: Model; rank?: number }) {
   const rel = model.latest_release
   return (
-    <a href={`/models/${model.slug}`} className="model-list-row">
-      <span style={{ fontSize: 14, flexShrink: 0 }}>📄</span>
-      <span style={{ flex: 1, color: '#0000ee', textDecoration: 'underline', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11 }}>
-        {model.name}
-      </span>
-      {model.architecture && (
-        <span style={{ background: '#c0c0c0', border: '1px solid #808080', padding: '0 4px', fontSize: 9, fontWeight: 'bold', textTransform: 'uppercase', flexShrink: 0, letterSpacing: '0.05em' }}>
-          {model.architecture}
+    <a
+      href={`/models/${model.slug}`}
+      className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors group"
+      style={{ textDecoration: 'none', color: 'inherit' }}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--hb-surface2)')}
+      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+    >
+      {rank !== undefined && (
+        <span className="text-xs font-mono w-5 text-right shrink-0" style={{ color: 'var(--hb-border2)' }}>
+          {rank + 1}
         </span>
       )}
-      <span style={{ color: '#808080', fontSize: 10, minWidth: 42, textAlign: 'right', flexShrink: 0 }}>
-        {rel ? fmtBytes(rel.total_size) : '—'}
-      </span>
-      <span style={{ fontFamily: 'VT323, monospace', fontSize: '1.1rem', color: '#00a020', minWidth: 40, textAlign: 'right', flexShrink: 0, textShadow: '0 0 4px rgba(0,160,32,0.4)' }}>
-        {model.download_count.toLocaleString()}
-      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium truncate" style={{ color: 'var(--hb-text)' }}>{model.name}</p>
+        <p className="text-xs truncate" style={{ color: 'var(--hb-muted)' }}>
+          {model.uploader?.display_name || model.uploader?.username || 'anonymous'}
+          {model.architecture && <> · {model.architecture}</>}
+        </p>
+      </div>
+      <div className="flex items-center gap-3 shrink-0">
+        {rel?.total_size && (
+          <span className="text-xs hidden sm:flex items-center gap-1" style={{ color: 'var(--hb-muted)' }}>
+            <HardDrive size={11} />
+            {fmtBytes(rel.total_size)}
+          </span>
+        )}
+        <span className="text-xs flex items-center gap-1 font-medium" style={{ color: '#22c55e' }}>
+          <Download size={11} />
+          {model.download_count.toLocaleString()}
+        </span>
+      </div>
     </a>
-  )
-}
-
-function WinWindow({ title, icon, count, viewAllHref, children }: {
-  title: string; icon: string; count: number; viewAllHref: string; children: React.ReactNode
-}) {
-  return (
-    <div className="win-window" style={{ padding: 0 }}>
-      {/* Title bar */}
-      <div className="win-titlebar">
-        <span>{icon} {title}</span>
-        <Link href={viewAllHref} style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10, fontFamily: 'Tahoma', textDecoration: 'underline', marginLeft: 'auto', fontWeight: 'normal' }}>
-          View all
-        </Link>
-        <div style={{ display: 'flex', gap: 2, marginLeft: 8 }}>
-          <span className="win-ctrl">─</span>
-          <span className="win-ctrl">□</span>
-          <span className="win-ctrl win-close">✕</span>
-        </div>
-      </div>
-      {/* Column header */}
-      <div style={{ background: '#c0c0c0', borderBottom: '1px solid #808080', padding: '2px 6px', display: 'flex', gap: 8, fontSize: 11, fontFamily: 'Tahoma', alignItems: 'center' }}>
-        <span style={{ flex: 1, fontWeight: 'bold', color: '#000' }}>Name</span>
-        <span style={{ color: '#808080', width: 42, textAlign: 'right', fontSize: 10 }}>Size</span>
-        <span style={{ color: '#00a020', width: 40, textAlign: 'right', fontFamily: 'VT323, monospace', fontSize: 13 }}>Seeds</span>
-      </div>
-      {/* Rows */}
-      <div style={{ background: 'white' }}>
-        {children}
-      </div>
-      {/* Status bar */}
-      <div style={{ background: '#c0c0c0', borderTop: '2px solid #808080', padding: '2px 6px', fontSize: 10, fontFamily: 'Tahoma', color: '#000', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{count} object(s)</span>
-        <span style={{ fontFamily: 'Share Tech Mono', color: '#00a020', fontSize: 9 }}>● LIVE</span>
-      </div>
-    </div>
   )
 }
 
@@ -82,98 +62,132 @@ export default async function HomePage() {
   const { latest, popular } = await getData()
 
   return (
-    <div style={{ background: '#0a0a0a', minHeight: '100vh' }}>
+    <div>
+      {/* ── Hero ── */}
+      <section className="relative overflow-hidden">
+        {/* Gradient background */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(124,58,237,0.15) 0%, transparent 60%)',
+        }} />
 
-      {/* ── CS 1.6 HUD banner ── */}
-      <div style={{
-        background: '#060f06',
-        borderBottom: '2px solid #00c851',
-        padding: '10px 20px',
-        fontFamily: 'Share Tech Mono, monospace',
-        fontSize: 11,
-        color: '#00c851',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 28,
-        flexWrap: 'wrap',
-      }}>
-        <span style={{ fontFamily: 'VT323, monospace', fontSize: '1.35rem', color: '#4ade80' }}>
-          HUGGING-BAY // OPEN AI MODEL REGISTRY
-        </span>
-        <span>NET: ONLINE</span>
-        <span>PROTO: BITTORRENT</span>
-        <span>MODE: NO GATEKEEPERS</span>
-        <Link href="/models" style={{ marginLeft: 'auto', color: '#f5e642', textDecoration: 'none', fontWeight: 'bold' }}>
-          [ BROWSE ALL ] →
-        </Link>
-      </div>
+        <div className="max-w-4xl mx-auto px-4 pt-20 pb-16 text-center relative">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-6 text-xs font-medium" style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)', color: '#a78bfa' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+            Open · Decentralized · BitTorrent
+          </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-5 space-y-5">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-5" style={{ lineHeight: 1.1 }}>
+            The open registry for
+            <span className="block" style={{
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              AI models
+            </span>
+          </h1>
 
-        {/* ── Feature panels (WinXP windows) ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <p className="text-base sm:text-lg mb-8 max-w-xl mx-auto" style={{ color: 'var(--hb-muted)' }}>
+            Upload, share, and download AI models freely. Distributed via BitTorrent — no gatekeepers, no bandwidth limits, no lock-in.
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link href="/models" className="btn-primary px-6 py-2.5 text-sm">
+              Browse models
+              <ArrowRight size={15} />
+            </Link>
+            <Link href="/upload" className="btn-secondary px-6 py-2.5 text-sm">
+              Upload a model
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Feature strip ── */}
+      <section className="border-y" style={{ borderColor: 'var(--hb-border)', background: 'var(--hb-surface)' }}>
+        <div className="max-w-5xl mx-auto px-4 py-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
-            { icon: '🌊', title: 'BITTORRENT DIST',  body: 'Decentralized distribution via BitTorrent. No bandwidth limits, no CDN costs. Community peers share the load.' },
-            { icon: '🔒', title: 'CRYPTO VERIFY',    body: 'SHA-256 / SHA-512 / BLAKE3 + torrent info_hash on every release. Verify every byte you download.' },
-            { icon: '⚡', title: 'OPEN REGISTRY',    body: 'No approval. No gatekeepers. Upload freely redistributable AI models and share them with the world.' },
+            { icon: Globe,  title: 'Decentralized',    body: 'Models distributed via BitTorrent. Community peers share the bandwidth — no single point of failure.' },
+            { icon: Shield, title: 'Verified hashes',  body: 'Every release ships SHA-256, SHA-512, and BLAKE3 checksums so you can verify every byte.' },
+            { icon: Zap,    title: 'Open API',         body: 'REST API with JWT and API key auth. Automate uploads and downloads from scripts or CI pipelines.' },
           ].map(f => (
-            <div key={f.title} className="win-window" style={{ padding: 0 }}>
-              <div className="win-titlebar">
-                <span>{f.icon} {f.title}</span>
-                <div style={{ display: 'flex', gap: 2, marginLeft: 'auto' }}>
-                  <span className="win-ctrl">─</span>
-                  <span className="win-ctrl">□</span>
-                  <span className="win-ctrl win-close">✕</span>
-                </div>
+            <div key={f.title} className="flex gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                <f.icon size={15} style={{ color: '#a78bfa' }} />
               </div>
-              <div style={{ padding: '10px 12px', fontSize: 11, fontFamily: 'Tahoma, sans-serif', color: '#000', background: '#f5f5f0' }}>
-                {f.body}
+              <div>
+                <p className="font-medium text-sm mb-1" style={{ color: 'var(--hb-text)' }}>{f.title}</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--hb-muted)' }}>{f.body}</p>
               </div>
             </div>
           ))}
         </div>
+      </section>
 
-        {/* ── Two-column: Recent + Popular ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <WinWindow title="Recently Added" icon="📁" count={latest.length} viewAllHref="/models">
+      {/* ── Model lists ── */}
+      <section className="max-w-5xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Recently added */}
+        <div className="card overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--hb-border)' }}>
+            <h2 className="font-semibold text-sm" style={{ color: 'var(--hb-text)' }}>Recently added</h2>
+            <Link href="/models?sort=recent" className="text-xs font-medium transition-colors hover:text-white" style={{ color: 'var(--hb-muted)', textDecoration: 'none' }}>
+              View all →
+            </Link>
+          </div>
+          <div className="py-1">
             {latest.length === 0
-              ? <p style={{ padding: '20px', textAlign: 'center', color: '#808080', fontFamily: 'Tahoma', fontSize: 11 }}>No models yet</p>
-              : latest.map((m: Model, i: number) => <ModelListRow key={m.id} model={m} index={i} />)
+              ? <p className="px-4 py-6 text-sm text-center" style={{ color: 'var(--hb-muted)' }}>No models yet.</p>
+              : latest.map((m: Model) => <ModelRow key={m.id} model={m} />)
             }
-          </WinWindow>
+          </div>
+        </div>
 
-          <WinWindow title="Most Downloaded" icon="🔥" count={popular.length} viewAllHref="/models?sort=popular">
+        {/* Most downloaded */}
+        <div className="card overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--hb-border)' }}>
+            <h2 className="font-semibold text-sm" style={{ color: 'var(--hb-text)' }}>Most downloaded</h2>
+            <Link href="/models?sort=popular" className="text-xs font-medium transition-colors hover:text-white" style={{ color: 'var(--hb-muted)', textDecoration: 'none' }}>
+              View all →
+            </Link>
+          </div>
+          <div className="py-1">
             {popular.length === 0
-              ? <p style={{ padding: '20px', textAlign: 'center', color: '#808080', fontFamily: 'Tahoma', fontSize: 11 }}>No models yet</p>
-              : popular.map((m: Model, i: number) => <ModelListRow key={m.id} model={m} index={i} />)
+              ? <p className="px-4 py-6 text-sm text-center" style={{ color: 'var(--hb-muted)' }}>No models yet.</p>
+              : popular.map((m: Model, i: number) => <ModelRow key={m.id} model={m} rank={i} />)
             }
-          </WinWindow>
+          </div>
         </div>
+      </section>
 
-        {/* ── CTA buttons ── */}
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', paddingTop: 4 }}>
-          <Link href="/models"         className="win-btn" style={{ padding: '6px 28px', fontSize: 12, fontWeight: 'bold' }}>📁 Browse All Models</Link>
-          <Link href="/upload"         className="win-btn" style={{ padding: '6px 28px', fontSize: 12 }}>📤 Upload a Model</Link>
-          <Link href="/auth/register"  className="win-btn" style={{ padding: '6px 28px', fontSize: 12 }}>👤 Join the Crew</Link>
-        </div>
+      {/* ── CTA ── */}
+      <section className="border-t" style={{ borderColor: 'var(--hb-border)' }}>
+        <div className="max-w-2xl mx-auto px-4 py-14 text-center">
+          <h2 className="text-2xl font-bold mb-3">Share your model with the world</h2>
+          <p className="text-sm mb-7" style={{ color: 'var(--hb-muted)' }}>
+            Uploading is free and open. Create an account, add your model metadata, and attach a .torrent file.
+          </p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link href="/auth/register" className="btn-primary px-6 py-2.5 text-sm">Create account</Link>
+            <Link href="/models" className="btn-secondary px-6 py-2.5 text-sm">Explore models</Link>
+          </div>
 
-        {/* ── TPB-style disclaimer ── */}
-        <div style={{
-          background: '#060f06',
-          border: '1px solid #1a4d1a',
-          padding: '8px 16px',
-          fontFamily: 'Share Tech Mono, monospace',
-          fontSize: 10,
-          color: '#1a4d1a',
-          lineHeight: 1.7,
-        }}>
-          <span style={{ color: '#f5e642' }}>⚠ NOTICE: </span>
-          Hugging-Bay hosts only freely redistributable AI models. All models are user-uploaded.
-          We do not host model weights directly — only metadata and .torrent files.
-          Not affiliated with Hugging Face.
-          <span style={{ color: '#f5e642' }}> ARR!</span>
+          {/* Donation — small and unobtrusive */}
+          <div className="mt-10 flex justify-center">
+            <a
+              href="https://ko-fi.com/Q2L8227VO8"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-xs transition-opacity hover:opacity-100"
+              style={{ color: 'var(--hb-border2)', opacity: 0.55, textDecoration: 'none' }}
+            >
+              ☕ If this is useful, buy me a coffee
+            </a>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   )
 }

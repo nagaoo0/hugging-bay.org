@@ -1,57 +1,49 @@
+import Link from 'next/link'
+import { Anchor } from 'lucide-react'
 import Clippy from './Clippy'
 
 export default function Footer() {
   return (
-    <>
-      <Clippy />
+    <footer className="border-t mt-auto" style={{ borderColor: 'var(--hb-border)', background: 'var(--hb-surface)' }}>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
 
-      <footer style={{ marginTop: 'auto' }}>
-        {/* WinXP status bar style */}
-        <div style={{
-          background: '#c0c0c0',
-          borderTop: '2px solid',
-          borderColor: '#fff #808080 #808080 #fff',
-          padding: '4px 10px',
-        }}>
-          <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-              <span style={{
-                fontFamily: 'Bebas Neue, sans-serif',
-                fontSize: '1.1rem',
-                color: '#0a246a',
-                letterSpacing: '0.05em',
-              }}>
-                ⚓ HUGGING-BAY
-              </span>
-              <span style={{ fontSize: '11px', fontFamily: 'Tahoma', color: '#808080' }}>
-                Open, decentralized AI model registry
-              </span>
+          {/* Brand */}
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
+              <Anchor size={16} color="white" strokeWidth={2.5} />
             </div>
-            <div style={{ display: 'flex', gap: 10, fontSize: '11px', fontFamily: 'Tahoma' }}>
-              <a href="/api/latest"                             style={{ color: '#0000ee' }}>API</a>
-              <span style={{ color: '#808080' }}>|</span>
-              <a href="https://github.com/hugging-bay" target="_blank" rel="noopener noreferrer" style={{ color: '#0000ee' }}>GitHub</a>
+            <div>
+              <p className="font-semibold text-sm" style={{ color: 'var(--hb-text)' }}>Hugging-Bay</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--hb-muted)' }}>Open, decentralized AI model registry</p>
             </div>
           </div>
+
+          {/* Links */}
+          <nav className="flex flex-wrap gap-x-6 gap-y-2">
+            {[
+              { href: '/models',         label: 'Browse' },
+              { href: '/upload',         label: 'Upload' },
+              { href: '/auth/login',     label: 'Sign in' },
+              { href: '/auth/register',  label: 'Sign up' },
+            ].map(l => (
+              <Link key={l.href} href={l.href} className="text-xs transition-colors hover:text-white" style={{ color: 'var(--hb-muted)', textDecoration: 'none' }}>
+                {l.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
-        {/* Dark strip — disclaimer */}
-        <div style={{
-          background: '#050f05',
-          borderTop: '1px solid #00c851',
-          padding: '4px 12px',
-          textAlign: 'center',
-          fontFamily: 'Share Tech Mono, monospace',
-          fontSize: '9px',
-          color: '#333',
-          letterSpacing: '0.05em',
-        }}>
-          <span style={{ color: '#1a4d1a' }}>
-            NO COPYRIGHT // SHARE AND ENJOY // NOT AFFILIATED WITH HUGGING FACE //
-            SEED GENEROUSLY // ARR!
-          </span>
+        <div className="mt-6 pt-6 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2" style={{ borderColor: 'var(--hb-border)' }}>
+          <p className="text-xs" style={{ color: 'var(--hb-muted)' }}>
+            No copyrights. All models freely redistributable. Not affiliated with Hugging Face.
+          </p>
+          <p className="text-xs font-mono" style={{ color: 'var(--hb-border2)' }}>
+            BitTorrent · DHT · Decentralized
+          </p>
         </div>
-      </footer>
-    </>
+      </div>
+      <Clippy />
+    </footer>
   )
 }
