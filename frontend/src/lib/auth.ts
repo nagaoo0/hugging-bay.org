@@ -1,0 +1,36 @@
+'use client'
+
+const TOKEN_KEY = 'hb_token'
+const USER_KEY = 'hb_user'
+
+export function getToken(): string | null {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+export function setToken(token: string) {
+  localStorage.setItem(TOKEN_KEY, token)
+}
+
+export function getStoredUser() {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(USER_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+export function setStoredUser(user: object) {
+  localStorage.setItem(USER_KEY, JSON.stringify(user))
+}
+
+export function clearAuth() {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(USER_KEY)
+}
+
+export function isLoggedIn(): boolean {
+  return !!getToken()
+}
