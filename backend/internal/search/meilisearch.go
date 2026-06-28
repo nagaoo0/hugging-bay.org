@@ -29,11 +29,11 @@ type ModelDocument struct {
 }
 
 type SearchResult struct {
-	Hits       []ModelDocument `json:"hits"`
-	TotalHits  int64           `json:"total_hits"`
-	Query      string          `json:"query"`
-	Offset     int64           `json:"offset"`
-	Limit      int64           `json:"limit"`
+	Hits      []ModelDocument `json:"hits"`
+	TotalHits int64           `json:"total_hits"`
+	Query     string          `json:"query"`
+	Offset    int64           `json:"offset"`
+	Limit     int64           `json:"limit"`
 }
 
 func NewClient(url, apiKey string) *Client {
@@ -76,7 +76,7 @@ func (c *Client) EnsureIndexes() error {
 }
 
 func (c *Client) IndexModel(doc ModelDocument) error {
-	_, err := c.ms.Index(c.index).AddDocuments([]ModelDocument{doc})
+	_, err := c.ms.Index(c.index).AddDocuments([]ModelDocument{doc}, nil)
 	return err
 }
 
@@ -86,11 +86,10 @@ func (c *Client) DeleteModel(id string) error {
 }
 
 func (c *Client) Search(query string, page, limit int, filters string) (*SearchResult, error) {
-	offset := int64((page - 1) * limit)
+	offset := (page - 1) * limit
 	req := &meilisearch.SearchRequest{
-		Query:  query,
-		Offset: offset,
-		Limit:  int64(limit),
+		Offset: &offset,
+		Limit:  &limit,
 	}
 	if filters != "" {
 		req.Filter = filters
@@ -101,22 +100,20 @@ func (c *Client) Search(query string, page, limit int, filters string) (*SearchR
 		return nil, err
 	}
 
-	totalHits := resp.TotalHits
-	if totalHits == 0 {
-		totalHits = resp.EstimatedTotalHits
+	var totalHits int64
+	if resp.EstimatedTotalHits != nil {
+		totalHits = int64(*resp.EstimatedTotalHits)
 	}
 
 	result := &SearchResult{
 		Query:     query,
 		TotalHits: totalHits,
-		Offset:    offset,
+		Offset:    int64(offset),
 		Limit:     int64(limit),
 	}
 	for _, hit := range resp.Hits {
-		if m, ok := hit.(map[string]interface{}); ok {
-			doc := hitToDocument(m)
-			result.Hits = append(result.Hits, doc)
-		}
+		doc := hitToDocument(map[string]interface{}(hit))
+		result.Hits = append(result.Hits, doc)
 	}
 	return result, nil
 }
