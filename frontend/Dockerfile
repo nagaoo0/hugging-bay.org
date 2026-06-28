@@ -1,8 +1,10 @@
 # ─── Dependencies ─────────────────────────────────────────────────────────────
+# No local Node.js needed — npm install runs here inside Docker.
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci
+# npm ci is preferred when package-lock exists; fall back to npm install
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # ─── Builder ──────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
@@ -22,8 +24,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./

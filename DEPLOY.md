@@ -27,24 +27,11 @@ openssl rand -hex 16
 # Set MINIO credentials to whatever you like
 ```
 
-### 3. Go dependency resolution (first time only)
-
-The Go backend needs its `go.sum` generated before the first Docker build:
+### 3. Build and launch
 
 ```bash
-cd backend
-go mod tidy   # requires Go 1.22+ installed locally
-cd ..
-```
-
-> **Alternative (no local Go needed):** The Dockerfile runs `go mod tidy` automatically,
-> so you can skip this step and let the first build handle it.
-
-### 4. Build and launch
-
-```bash
-docker compose build
-docker compose up -d
+make build
+make up
 ```
 
 Check logs:
