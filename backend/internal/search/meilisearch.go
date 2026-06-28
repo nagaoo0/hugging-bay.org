@@ -1,6 +1,7 @@
 package search
 
 import (
+	"encoding/json"
 	"fmt"
 
 	meilisearch "github.com/meilisearch/meilisearch-go"
@@ -54,24 +55,25 @@ func (c *Client) EnsureIndexes() error {
 
 	idx := c.ms.Index(c.index)
 
-	_, err = idx.UpdateFilterableAttributes(&[]string{
+	filterableAttrs := []interface{}{
 		"architecture", "framework", "license", "language",
 		"verification_status", "tags", "total_size", "parameter_count",
-	})
+	}
+	_, err = idx.UpdateFilterableAttributes(&filterableAttrs)
 	if err != nil {
 		return fmt.Errorf("update filterable attrs: %w", err)
 	}
 
-	_, err = idx.UpdateSortableAttributes(&[]string{
-		"download_count", "parameter_count", "total_size",
-	})
+	sortableAttrs := []interface{}{"download_count", "parameter_count", "total_size"}
+	_, err = idx.UpdateSortableAttributes(&sortableAttrs)
 	if err != nil {
 		return fmt.Errorf("update sortable attrs: %w", err)
 	}
 
-	_, err = idx.UpdateSearchableAttributes(&[]string{
+	searchableAttrs := []interface{}{
 		"name", "description", "architecture", "tags", "license", "framework",
-	})
+	}
+	_, err = idx.UpdateSearchableAttributes(&searchableAttrs)
 	return err
 }
 
@@ -81,15 +83,15 @@ func (c *Client) IndexModel(doc ModelDocument) error {
 }
 
 func (c *Client) DeleteModel(id string) error {
-	_, err := c.ms.Index(c.index).DeleteDocument(id)
+	_, err := c.ms.Index(c.index).DeleteDocument(id, nil)
 	return err
 }
 
 func (c *Client) Search(query string, page, limit int, filters string) (*SearchResult, error) {
-	offset := (page - 1) * limit
+	offset := int64((page - 1) * limit)
 	req := &meilisearch.SearchRequest{
-		Offset: &offset,
-		Limit:  &limit,
+		Offset: offset,
+		Limit:  int64(limit),
 	}
 	if filters != "" {
 		req.Filter = filters
@@ -100,59 +102,23 @@ func (c *Client) Search(query string, page, limit int, filters string) (*SearchR
 		return nil, err
 	}
 
-	var totalHits int64
-	if resp.EstimatedTotalHits != nil {
-		totalHits = int64(*resp.EstimatedTotalHits)
-	}
+	totalHits := resp.EstimatedTotalHits
 
 	result := &SearchResult{
 		Query:     query,
 		TotalHits: totalHits,
-		Offset:    int64(offset),
+		Offset:    offset,
 		Limit:     int64(limit),
 	}
 	for _, hit := range resp.Hits {
-		doc := hitToDocument(map[string]interface{}(hit))
-		result.Hits = append(result.Hits, doc)
-	}
-	return result, nil
-}
-
-func hitToDocument(m map[string]interface{}) ModelDocument {
-	doc := ModelDocument{}
-	if v, ok := m["id"].(string); ok {
-		doc.ID = v
-	}
-	if v, ok := m["slug"].(string); ok {
-		doc.Slug = v
-	}
-	if v, ok := m["name"].(string); ok {
-		doc.Name = v
-	}
-	if v, ok := m["description"].(string); ok {
-		doc.Description = v
-	}
-	if v, ok := m["architecture"].(string); ok {
-		doc.Architecture = v
-	}
-	if v, ok := m["framework"].(string); ok {
-		doc.Framework = v
-	}
-	if v, ok := m["license"].(string); ok {
-		doc.License = v
-	}
-	if v, ok := m["verification_status"].(string); ok {
-		doc.VerificationStatus = v
-	}
-	if v, ok := m["download_count"].(float64); ok {
-		doc.DownloadCount = int64(v)
-	}
-	if v, ok := m["tags"].([]interface{}); ok {
-		for _, t := range v {
-			if s, ok := t.(string); ok {
-				doc.Tags = append(doc.Tags, s)
-			}
+		raw, err := json.Marshal(hit)
+		if err != nil {
+			continue
+		}
+		var doc ModelDocument
+		if err := json.Unmarshal(raw, &doc); err == nil {
+			result.Hits = append(result.Hits, doc)
 		}
 	}
-	return doc
+	return result, nil
 }
