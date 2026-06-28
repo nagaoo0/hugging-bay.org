@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: '%s | Hugging-Bay',
     default: 'Hugging-Bay — Open AI Model Registry',
   },
-  description: 'Open, decentralized registry and distribution platform for AI models and datasets via BitTorrent.',
+  description: 'Open, decentralized registry and distribution platform for AI models via BitTorrent.',
   keywords: ['AI models', 'machine learning', 'open source', 'BitTorrent', 'decentralized'],
   openGraph: {
     type: 'website',
@@ -24,6 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=VT323&family=Share+Tech+Mono&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body className="flex flex-col min-h-screen">
         <Header />
